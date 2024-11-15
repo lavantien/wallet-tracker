@@ -1,7 +1,9 @@
+// process.go
 package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -20,10 +22,10 @@ type Transaction struct {
 
 // TransactionSummary represents the processed transaction data
 type TransactionSummary struct {
-	Period           string // YYYY/MM format
-	TotalIncome      int
-	TotalExpenditure int
-	Transactions     []Transaction
+	Period           string        `json:"period"` // YYYY/MM format
+	TotalIncome      int           `json:"total_income"`
+	TotalExpenditure int           `json:"total_expenditure"`
+	Transactions     []Transaction `json:"transactions"`
 }
 
 func ProcessCSV(config *Config) (*TransactionSummary, error) {
@@ -75,6 +77,15 @@ func ProcessCSV(config *Config) (*TransactionSummary, error) {
 
 	// Calculate totals
 	summary := calculateSummary(filtered, config.Period)
+
+	// Marshal summary to JSON
+	jsonOutput, err := json.MarshalIndent(summary, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling summary to JSON: %v", err)
+	}
+
+	// Output the JSON
+	fmt.Println(string(jsonOutput))
 
 	return summary, nil
 }
