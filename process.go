@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -17,8 +18,15 @@ type Transaction struct {
 	Content string
 }
 
-// ProcessCSV reads and validates CSV file, returns transactions for the specified period
-func ProcessCSV(config *Config) ([]Transaction, error) {
+// TransactionSummary represents the processed transaction data
+type TransactionSummary struct {
+	Period           string // YYYY/MM format
+	TotalIncome      int
+	TotalExpenditure int
+	Transactions     []Transaction
+}
+
+func ProcessCSV(config *Config) (*TransactionSummary, error) {
 	file, err := os.Open(config.FilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %v", err)
@@ -59,7 +67,46 @@ func ProcessCSV(config *Config) ([]Transaction, error) {
 		transactions = append(transactions, transaction)
 	}
 
-	return filterTransactionsByPeriod(transactions, config.Period), nil
+	// Filter transactions for the specified period
+	filtered := filterTransactionsByPeriod(transactions, config.Period)
+
+	// Sort transactions by date in descending order
+	sortTransactions(filtered)
+
+	// Calculate totals
+	summary := calculateSummary(filtered, config.Period)
+
+	return summary, nil
+}
+
+// sortTransactions sorts transactions by date in descending order
+func sortTransactions(transactions []Transaction) {
+	sort.Slice(transactions, func(i, j int) bool {
+		return transactions[i].Date.After(transactions[j].Date)
+	})
+}
+
+// calculateSummary processes transactions and returns a summary
+func calculateSummary(transactions []Transaction, period string) *TransactionSummary {
+	summary := &TransactionSummary{
+		Period:       formatPeriod(period), // Convert YYYYMM to YYYY/MM
+		Transactions: transactions,
+	}
+
+	for _, t := range transactions {
+		if t.Amount > 0 {
+			summary.TotalIncome += t.Amount
+		} else {
+			summary.TotalExpenditure += t.Amount
+		}
+	}
+
+	return summary
+}
+
+// formatPeriod converts YYYYMM to YYYY/MM format
+func formatPeriod(period string) string {
+	return period[:4] + "/" + period[4:]
 }
 
 func validateHeader(header []string) error {
