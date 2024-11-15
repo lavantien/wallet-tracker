@@ -119,12 +119,6 @@ Check `Projects` tab.
 <details>
     <summary>... expand</summary>
 
-Certainly! Below is a detailed explanation of your solution, structured according to the specified points. This explanation will help convey your thought process, technology choices, design decisions, requirement fulfillment, and future work considerations.
-
----
-
-## Detailed Explanation of the Solution
-
 ### Thought Process
 
 1. **Understanding Requirements**:
