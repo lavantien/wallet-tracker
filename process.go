@@ -29,6 +29,22 @@ type TransactionSummary struct {
 }
 
 func ProcessCSV(config *Config) (*TransactionSummary, error) {
+	// Check for empty file
+	fileInfo, err := os.Stat(config.FilePath)
+	if err != nil {
+		return nil, fmt.Errorf("error getting file info: %v", err)
+	}
+
+	// Check if the file is empty
+	if fileInfo.Size() == 0 {
+		return &TransactionSummary{
+			Period:           formatPeriod(config.Period),
+			TotalIncome:      0,
+			TotalExpenditure: 0,
+			Transactions:     []Transaction{},
+		}, nil // Return an empty summary without error
+	}
+
 	file, err := os.Open(config.FilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %v", err)
